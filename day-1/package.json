@@ -1,0 +1,24 @@
+{
+  "name": "day-1",
+  "version": "1.0.0",
+  "description": "typescript",
+  "main": "main1.js",
+  "dependencies": {
+    "typescript": "^2.8.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GalShvarzman/typescript.git"
+  },
+  "author": "Gal",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GalShvarzman/typescript/issues"
+  },
+  "homepage": "https://github.com/GalShvarzman/typescript#readme"
+}
