@@ -12,7 +12,8 @@ class LinkedList{
         this.tail = null;
         this.length = 0;
     }
-    add(node){
+    add(n){
+        const node = new Node(n);
         if(this.length){
             this.tail.next = node;
             node.prev = this.tail;
@@ -23,7 +24,6 @@ class LinkedList{
             this.tail = node;
         }
         this.length ++;
-        console.log("Node added successfully to the list");
         return node;
     }
     search(position){
@@ -49,7 +49,6 @@ class LinkedList{
             prev.next = next;
 
             this.length--;
-            console.log("Node removes successfully");
             return this;
         }
         catch(err){
@@ -57,21 +56,14 @@ class LinkedList{
         }
     }
     print(){
+        const listArray = [];
         let current = this.head;
-        console.log(current.data);
+
+        listArray.push(current.data);
         for(let i = 1; i < this.length; i++){
             current = current.next;
-            console.log(current.data);
+            listArray.push(current.data);
         }
+        return listArray;
     }
 }
-
-const myList = new LinkedList();
-
-myList.add(new Node("one"));
-myList.add(new Node("two"));
-myList.add(new Node("three"));
-myList.add(new Node("four"));
-myList.add(new Node("five"));
-
-myList.print();
