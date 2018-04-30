@@ -1,12 +1,12 @@
-const {UsersDb} = require('./users');
-const {GroupsDb} = require('./groups');
-const {Group} = require('./group');
-const {User} = require('./user');
 const readline = require('readline');
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
+const {UsersDb} = require('./models/users');
+const {GroupsDb} = require('./models/groups');
+const {Group} = require('./models/group');
+const {User} = require('./models/user');
 
 const usersDb = new UsersDb();
 const groupsDb = new GroupsDb();
@@ -14,52 +14,58 @@ const groupsDb = new GroupsDb();
 whatDoYouWantToDoNext();
 
 function whatDoYouWantToDoNext(){
-    rl.question('What do you want to do next?\n' +
-        'Create [new user]?, [delete user]?, [print users] list?\n' +
-        'update [user age]?, update [user password]?\n'+
-        'Create [new group]?, [delete group]?, [print groups] list?,\n' +
-        'update [group name]?, [add user to group]?, [delete user from group]?,\n' +
-        'Print a [list of groups and users] under each group?, [exit]?\n', main);
+    rl.question(
+        `What do you want to do next?
+[NU] Create new user,
+[DU] delete user,
+[PU] print users list
+[UA] update user age,
+[UP] update user password,
+[NG] create new group,
+[DG] delete group,
+[PG] print groups list,
+[AUG] add user to group,
+[DUG] delete user from group,
+[PGU] Print a list of groups and users under each group,
+[E] exit
+` , main);
 
     function main(answer){
         switch (answer) {
-            case 'new user':
+            case 'NU':
                 createNewUser();
                 break;
-            case 'delete user':
+            case 'DU':
                 deleteUser();
                 break;
-            case 'print users':
+            case 'PU':
                 printUsersList();
                 break;
-            case 'user age':
-                //....
+            case 'UA':
+                updateUserAge();
                 break;
-            case 'user password':
-                //
+            case 'UP':
+                updateUserPassword();
                 break;
-            case 'new group':
+            case 'NG':
                 createNewGroup();
                 break;
-            case 'delete group':
+            case 'DG':
                 deleteGroup();
                 break;
-            case 'print groups':
+            case 'PG':
                 printGroupsList();
                 break;
-            case 'group name':
-                //
-                break;
-            case 'add user to group':
+            case 'AUG':
                 getUsernameAndGroupName("add");
                 break;
-            case 'delete user from group':
+            case 'DUG':
                 getUsernameAndGroupName("delete");
                 break;
-            case 'list of groups and users':
+            case 'PGU':
                 printListOfGroupsAndUsersUnderEachGroup();
                 break;
-            case 'exit':
+            case 'E':
                 exitChat();
                 break;
             default:
@@ -70,19 +76,76 @@ function whatDoYouWantToDoNext(){
     }
 }
 
+function updateUserPassword(){
+    let username, selectedUser, passwordInDb;
+    rl.question("Enter the name of the user you want to update\n", userPassword);
+
+    function userPassword(name){
+        username = name;
+        if(usersDb.isUserExists(username)){
+            selectedUser = usersDb.getUser(username);
+            passwordInDb = selectedUser.password;
+            rl.question("Enter the user old password\n", verifyOldPassword)
+        }
+        else{
+            console.log(`${username} do not exists`);
+            whatDoYouWantToDoNext();
+        }
+    }
+    function verifyOldPassword(oldPassword){
+        if(oldPassword === passwordInDb){
+            rl.question("Enter the user new password\n", updatePassword)
+        }
+        else{
+            console.log("The password does not match the previous password");
+            whatDoYouWantToDoNext();
+        }
+    }
+    function updatePassword(newPassword){
+        selectedUser.setPassword(newPassword);
+        console.log(`${selectedUser.username}'s password was updated successfully`);
+        whatDoYouWantToDoNext();
+    }
+}
+
+function updateUserAge(){
+    let username, selectedUser, age;
+    rl.question("Enter the name of the user you want to update\n", userAge);
+
+    function userAge(name) {
+        username = name;
+        if(usersDb.isUserExists(username)){
+            selectedUser = usersDb.getUser(username);
+            age = selectedUser.age;
+            rl.question("Enter the user new age\n", updateAge)
+        }
+        else{
+            console.log(`${username} do not exists`);
+            whatDoYouWantToDoNext();
+        }
+    }
+    function updateAge(newAge){
+        if(newAge !== age){
+            selectedUser.setAge(newAge);
+            console.log(`${selectedUser.username} age updated from ${age} to ${newAge}`);
+            whatDoYouWantToDoNext();
+        }
+        else{
+            console.log(`The age is already set to ${newAge}`);
+            whatDoYouWantToDoNext();
+        }
+    }
+}
+
 function deleteUserFromGroup(username, groupName){
     if(usersDb.isUserExists(username) && groupsDb.isGroupExists(groupName)) {
-        let groupsNamesArray = groupsDb.getGroupsNamesArray();
-        let groupIndex = groupsNamesArray.findIndex((group)=>{
-            return group === groupName;
-        });
-        if(!groupsDb.groups[groupIndex].isUserExistsInGroup(username)){
+        const selectedGroup = groupsDb.getGroup(groupName);
+        if(!selectedGroup.isUserExistsInGroup(username)){
             console.log('User do not exists in this group');
             whatDoYouWantToDoNext();
             return;
         }
-        //let userIndex = usersDb.findUserIndex(username);
-        if(groupsDb.groups[groupIndex].deleteUserFromGroup(username)){
+        else if(selectedGroup.deleteUserFromGroup(username)){
             console.log(`${username} deleted successfully from group ${groupName}`);
             whatDoYouWantToDoNext();
             return
@@ -98,17 +161,14 @@ function deleteUserFromGroup(username, groupName){
 
 function addUserToGroup(username, groupName){
     if(usersDb.isUserExists(username) && groupsDb.isGroupExists(groupName)){
-         let groupsNamesArray = groupsDb.getGroupsNamesArray();
-         let groupIndex = groupsNamesArray.findIndex((group)=>{
-             return group === groupName;
-         });
-        if(groupsDb.groups[groupIndex].isUserExistsInGroup(username)){
+        const selectedGroup = groupsDb.getGroup(groupName);
+        if(selectedGroup.isUserExistsInGroup(username)){
             console.log('User already exists in this group');
             whatDoYouWantToDoNext();
             return;
         }
-        let userIndex = usersDb.findUserIndex(username);
-        groupsDb.groups[groupIndex].addUserToGroup(usersDb.users[userIndex]);
+        const selectedUser = usersDb.getUser(username);
+        selectedGroup.addUserToGroup(selectedUser);
         console.log(`${username} added successfully to group ${groupName}`);
         whatDoYouWantToDoNext();
     }
@@ -120,10 +180,10 @@ function addUserToGroup(username, groupName){
 
 function getUsernameAndGroupName(action){
     let username, groupName;
-    rl.question('Enter a [username]\n', whichGroup);
+    rl.question('Enter a username\n', whichGroup);
     function whichGroup(name){
         username = name;
-        rl.question('Enter a [group] name\n', onFinnish);
+        rl.question('Enter a group name\n', onFinnish);
     }
     function onFinnish(group){
         groupName = group;
@@ -151,7 +211,8 @@ function exitChat(){
 
 function deleteUser(){
     rl.question('enter the username you want to delete\n', (name)=>{
-        if(usersDb.users.length){
+        const usersArray = usersDb.getUsersArray();
+        if(usersArray.length){
             let groupsArray = groupsDb.getGroupsArray();
             groupsArray.forEach((group)=>{
                 if(group.isUserExistsInGroup(name)){
@@ -173,10 +234,10 @@ function deleteUser(){
 }
 
 function printUsersList(){
-    if(usersDb.users.length){
-        let userNamesArray = usersDb.getUserNamesArray();
+    const userNamesArray = usersDb.getUserNamesArray();
+    if(userNamesArray.length){
         userNamesArray.forEach((username, i)=>{
-            console.log(`#${i+1} username`);
+            console.log(`#${i+1} ${username}`);
         });
         whatDoYouWantToDoNext();
         return;
@@ -186,8 +247,9 @@ function printUsersList(){
 }
 
 function printGroupsList(){
-    if(groupsDb.groups.length){
-        let groupsNamesArray = groupsDb.getGroupsNamesArray();
+    const groupsArray = groupsDb.getGroupsArray();
+    if(groupsArray.length){
+        const groupsNamesArray = groupsDb.getGroupsNamesArray();
         groupsNamesArray.forEach((groupName, i)=>{
             console.log(`#${i+1} ${groupName}`);
         });
@@ -202,7 +264,8 @@ function printListOfGroupsAndUsersUnderEachGroup(){
     let groupsArray = groupsDb.getGroupsArray();
     groupsArray.forEach((group)=>{
         console.log(group.name);
-        group.users.forEach((user)=>{
+        const groupUsers = group.getGroupUsersArray();
+        groupUsers.forEach((user)=>{
             console.log(`\t${user.username}(${user.age})`);
         })
     });
@@ -217,7 +280,7 @@ function createNewGroup(){
             createNewGroup();
             return;
         }
-        groupsDb.addGroup(new Group(name, []));
+        groupsDb.addGroup(new Group(name));
         console.log("Group created successfully");
         whatDoYouWantToDoNext();
     }
@@ -225,7 +288,8 @@ function createNewGroup(){
 
 function deleteGroup(){
     rl.question('enter the name of the group you want to delete\n', (name)=>{
-        if(groupsDb.groups.length){
+        let groupsArray = groupsDb.getGroupsArray();
+        if(groupsArray.length){
             if(groupsDb.deleteGroup(name)){
                 console.log("Group deleted successfully");
                 whatDoYouWantToDoNext();
@@ -264,6 +328,12 @@ function createNewUser(){
 }
 
 
+/*
+const userEmitter = new UserEmitter();
+userEmitter.on('event', () => {
+    console.log('an event occurred!');
+});
 
 
-
+userEmitter.emit('event');
+ */
