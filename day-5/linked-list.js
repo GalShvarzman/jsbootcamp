@@ -55,11 +55,9 @@ class LinkedList{
             throw new Error("Can not remove node because the list is empty or the node do not exist");
         }
     }
-    print(){
-        const listArray = [];
+    getList(){
         let current = this.head;
-
-        listArray.push(current.data);
+        const listArray = [current.data];
         for(let i = 1; i < this.length; i++){
             current = current.next;
             listArray.push(current.data);
